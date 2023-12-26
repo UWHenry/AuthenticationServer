@@ -8,7 +8,7 @@ class UserBase(BaseModel):
     
 class UserCreate(UserBase):
     password: str
-    email: str = None
+    email: str = ""
     
 class UserUpdate(BaseModel):
     username: str | None = None
