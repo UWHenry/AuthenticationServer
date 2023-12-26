@@ -60,7 +60,7 @@ class TokenCRUD:
         return db_token
     
     @staticmethod
-    async def delete_expired_tokens(db: AsyncSession, refresh_token_alive_time: int = None) -> int:
+    async def delete_expired_tokens(db: AsyncSession, refresh_token_alive_time: timedelta = None) -> int:
         if refresh_token_alive_time is None:
             refresh_token_alive_time = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
         earliest_token_alive_time  = datetime.utcnow() - refresh_token_alive_time
