@@ -31,14 +31,14 @@ async def get_current_user(token: TokenDependency, db: DatabaseDependency) -> Us
 async def read(user: Annotated[User, Depends(get_current_user)]) -> User:
     return user
 
-@user_router.post("/", status_code= 201, responses={409: {"model": ExceptionMessage}})
+@user_router.post("", status_code= 201, responses={409: {"model": ExceptionMessage}})
 async def create(user: UserCreate, db: DatabaseDependency) -> User:
     try:
         return await UserCRUD.create_user(db, user)
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Username Already Exists")
 
-@user_router.put("/", responses = {401: {"model": ExceptionMessage}, 409: {"model": ExceptionMessage}})
+@user_router.put("", responses = {401: {"model": ExceptionMessage}, 409: {"model": ExceptionMessage}})
 async def update(updates: UserUpdate, user: Annotated[User, Depends(get_current_user)], db: DatabaseDependency) -> User:
     try:
         result = await UserCRUD.update_user(db, user.id, updates)
@@ -46,6 +46,6 @@ async def update(updates: UserUpdate, user: Annotated[User, Depends(get_current_
         raise HTTPException(status_code=409, detail="Username Already Exists")
     return result
 
-@user_router.delete("/", status_code=204)
+@user_router.delete("", status_code=204)
 async def delete(user: Annotated[User, Depends(get_current_user)], db: DatabaseDependency) -> None:
     await UserCRUD.delete_user_by_username(db, user.username)
