@@ -17,7 +17,8 @@ from utils.crud import TokenCRUD
 async def periodic_token_cleanup(db: AsyncSession):
     token_cleanup_interval = os.environ.get("TOKEN_CLEANUP_MINUTES", 60)
     while True:
-        await TokenCRUD.delete_expired_tokens(db)
+        await TokenCRUD.delete_expired_access_tokens(db)
+        await TokenCRUD.delete_expired_refresh_tokens(db)
         await asyncio.sleep(token_cleanup_interval * 60)
 
 @asynccontextmanager
@@ -32,3 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(user_router)
 app.include_router(auth_router)
+
+@app.get("/livenessProbe")
+def health_check():
+    return {"status": "Running"}

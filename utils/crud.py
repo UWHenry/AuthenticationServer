@@ -4,11 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 from models.user import User
-from models.token import Token
+from models.access_token import AccessToken
+from models.refresh_token import RefreshToken
 from schemas.user_schemas import UserCreate, UserUpdate
 from schemas.token_schemas import TokenCreate
 from utils.password_utils import get_password_hash
-from utils.jwt import REFRESH_TOKEN_EXPIRE_MINUTES
+from utils.jwt import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 
 class UserCRUD:
     @staticmethod
@@ -17,8 +18,8 @@ class UserCRUD:
         return results.scalars().first()
 
     @staticmethod
-    async def get_user_by_id(db: AsyncSession, id: int) -> User | None:
-        results = await db.execute(select(User).filter(User.id == id))
+    async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
+        results = await db.execute(select(User).filter(User.id == user_id))
         return results.scalars().first()
 
     @staticmethod
@@ -52,18 +53,53 @@ class UserCRUD:
 
 class TokenCRUD:
     @staticmethod
-    async def create_token(db: AsyncSession, token: TokenCreate) -> Token:
-        db_token = Token(access_token=token.access_token, refresh_token=token.refresh_token, user_id=token.user_id)
+    async def create_access_token(db: AsyncSession, token: TokenCreate) -> AccessToken:
+        db_token = AccessToken(
+            access_token=token.token, 
+            expiration_time=datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+            user_id=token.user_id
+        )
         db.add(db_token)
         await db.commit()
         await db.refresh(db_token)
         return db_token
     
     @staticmethod
-    async def delete_expired_tokens(db: AsyncSession, refresh_token_alive_time: timedelta = None) -> int:
-        if refresh_token_alive_time is None:
-            refresh_token_alive_time = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
-        earliest_token_alive_time  = datetime.utcnow() - refresh_token_alive_time
-        result = await db.execute(delete(Token).where(Token.create_time < earliest_token_alive_time))
+    async def get_refresh_token_by_userid(db: AsyncSession, user_id: str) -> RefreshToken | None:
+        results = await db.execute(select(RefreshToken).filter(RefreshToken.user_id == user_id))
+        return results.scalars().first()
+    
+    @staticmethod
+    async def create_refresh_token(db: AsyncSession, token: TokenCreate) -> RefreshToken:
+        db_token = RefreshToken(
+            user_id=token.user_id,
+            refresh_token=token.token,
+            expiration_time=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        )
+        db.add(db_token)
+        await db.commit()
+        await db.refresh(db_token)
+        return db_token
+
+    @staticmethod
+    async def update_refresh_token(db: AsyncSession, token: TokenCreate) -> RefreshToken | None:
+        db_token = await TokenCRUD.get_refresh_token_by_userid(db, token.user_id)
+        if db_token is not None:
+            db_token.refresh_token = token.token
+            db_token.expiration_time = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+            await db.commit()
+            await db.refresh(db_token)
+        return db_token
+    
+    
+    @staticmethod
+    async def delete_expired_access_tokens(db: AsyncSession) -> int:
+        result = await db.execute(delete(AccessToken).where(AccessToken.expiration_time < datetime.utcnow()))
+        await db.commit()
+        return result.rowcount
+    
+    @staticmethod
+    async def delete_expired_refresh_tokens(db: AsyncSession) -> int:
+        result = await db.execute(delete(RefreshToken).where(RefreshToken.expiration_time < datetime.utcnow()))
         await db.commit()
         return result.rowcount
