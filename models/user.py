@@ -10,3 +10,4 @@ class User(Base):
     email: Mapped[str] = mapped_column(default="")
     password_hash: Mapped[str] = mapped_column(nullable=False)
     create_time: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
+    last_update_time: Mapped[datetime] = mapped_column(nullable=True, default=None, onupdate=datetime.utcnow)
