@@ -1,21 +1,19 @@
 version: "3.9"
 services:
-    # web:
-    #     build: .
-    #     restart: on-failure:3
-    #     volumes:
-    #         - .:/app
-    #     ports:
-    #         - "8000:8000"
-    #     depends_on:
-    #         - db
-    #     environment:
-    #         # FLASK_DEBUG: 1
-    #         # FLASK_APP: project/app.py
-    #         # FLASK_ENV: development
-    #         # FLASK_RUN_PORT: 8000
-    #         # FLASK_RUN_HOST: 0.0.0.0
-    #         DATABASE_URL: postgresql://postgres:password@db:5432/mydb
+    backend:
+        build: .
+        restart: on-failure:3
+        ports:
+            - "8000:8000"
+        depends_on:
+            - db
+        environment:
+            SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://db:password@db/mydb
+            JWT_SECRET_KEY: "f7bfef017ef0b30c0fa8de9caff04253939b6916b15e47aa2d865db53266eb9a"
+            JWT_ALGORITHM: "HS256"
+            JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 30
+            JWT_REFRESH_TOKEN_EXPIRE_DAYS: 1
+            TOKEN_CLEANUP_MINUTES: 60
 
     db:
         image: postgres
@@ -24,13 +22,5 @@ services:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: password
             POSTGRES_DB: mydb
-        ports: 
+        ports:
             - "5432:5432"
-    # nginx:
-    #     image: nginx
-    #     ports:
-    #         - "80:80"
-    #     volumes:
-    #         - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    #     depends_on:
-    #         - web
