@@ -8,7 +8,7 @@ services:
         depends_on:
             - db
         environment:
-            SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://db:password@db/mydb
+            SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:password@db/mydb
             JWT_SECRET_KEY: "f7bfef017ef0b30c0fa8de9caff04253939b6916b15e47aa2d865db53266eb9a"
             JWT_ALGORITHM: "HS256"
             JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 30
