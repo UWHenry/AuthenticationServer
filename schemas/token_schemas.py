@@ -13,10 +13,9 @@ class RefreshToken(BaseModel):
     expires_in: int = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
     model_config = {"from_attributes": True}
 
-class TokenData(BaseModel):
-    username: str | None = None
-    scopes: list[str] = []
-
 class TokenCreate(BaseModel):
     token: str
     user_id: int
+
+class RefreshEndpointInput(BaseModel):
+    refresh_token: str

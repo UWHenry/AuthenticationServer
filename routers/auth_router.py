@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database import DatabaseDependency
 from models.user import User
-from schemas.token_schemas import JWTToken, TokenCreate, RefreshToken
+from schemas.token_schemas import JWTToken, TokenCreate, RefreshToken, RefreshEndpointInput
 from schemas.util_schemas import ExceptionMessage
 from utils.crud import UserCRUD, TokenCRUD
 from utils.password_utils import verify_password
@@ -43,7 +43,7 @@ async def generate_access_token(
     )
     return await TokenCRUD.create_access_token(db, token)
 
-@auth_router.post("/refresh_token", responses={401: {"model": ExceptionMessage}})
+@auth_router.get("/refresh_token", responses={401: {"model": ExceptionMessage}})
 async def generate_refresh_token(token: TokenDependency, db: DatabaseDependency) -> RefreshToken:
     user = await get_current_user(token, db)
     refresh_token = create_refresh_token()
@@ -59,10 +59,10 @@ async def generate_refresh_token(token: TokenDependency, db: DatabaseDependency)
     return db_token
 
 @auth_router.post("/refresh", responses={401: {"model": ExceptionMessage}})
-async def generate_access_token_with_refresh_token(refresh_token: str, token: TokenDependency, db: DatabaseDependency) -> JWTToken:
+async def generate_access_token_with_refresh_token(refresh_token: RefreshEndpointInput, token: TokenDependency, db: DatabaseDependency) -> JWTToken:
     user = await get_current_user(token, db)
     db_token = await TokenCRUD.get_refresh_token_by_userid(db, user.id)
-    if db_token is None or db_token.refresh_token != refresh_token:
+    if db_token is None or db_token.refresh_token != refresh_token.refresh_token:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
     
     access_token = create_access_token(user.username)
