@@ -24,8 +24,7 @@ Before you proceed, make sure you have the following installed on your machine:
 
 ## Usage
 Once the services are up and running, you can access the application through a web browser.
-* Backend API: http://localhost:8000/
-* Swagger API documentation: http://localhost:8443/docs
+* Swagger API documentation: http://localhost:8000/docs
 
 ## Features
 * FastAPI: Backend framework for building the API.
